@@ -151,7 +151,6 @@ int main(void){
 	init_stream(F_CPU);
 	init_adc();
 	init_clock();
-	srand(time(0));
 	
 	sei();
 	
