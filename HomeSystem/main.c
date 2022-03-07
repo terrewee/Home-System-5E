@@ -88,7 +88,7 @@ void executeCommand(){
 	switch (){
 		// insert command options
 	}
-	// need to send back if executed sucessfully
+	// need to send back if executed successfully
 }
 
 // -----STATES-----
