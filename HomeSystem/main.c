@@ -1,4 +1,4 @@
-#define  F_CPU   32000000UL
+#define  F_CPU   2000000UL
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -9,10 +9,13 @@
 #include <stdlib.h>
 #include <time.h>
 
+
 #include "clock.h"
 #include "ucglib/ucg.h"
 #include "ucglib_xmega.h"
 #include "serialF0/serialF0.h"
+#include "nrf24/nrf24spiXM2.h"
+#include "nrf24/nrf24L01.h"
 
 // ----------------------------SET DISPLAY-------------------------------
 pin_t connectArraySPI[] = {
@@ -21,7 +24,31 @@ pin_t connectArraySPI[] = {
 	{ UCG_XMEGA_PIN_NULL }
 };
 
-ucg_t    ucg;
+ucg_t ucg;
+
+// ---------------------------COMMUNICATION--------------------------------
+
+unsigned int8_t pipe[5] = {0x48, 0x76, 0x41, 0x30, 0x31};	// pipe address "HVA01"
+
+void int_nrf(){
+	nrfspiInit();
+	nrfBegin();
+	
+	nrfSetRetries(NRF_SETUP_ARD_1000US_gc, NRF_SETUP_ARC_8RETRANSMIT_gc);
+	nrfSetPALevel(NRF_RF_SETUP_PWR_6DBM_gc);
+	nrfSetDataRate(NRF_RF_SETUP_RF_DR_250K_gc);
+	nrfSetCRCLength(NRF_CONFIG_CRC_16_gc);
+	nrfSetChannel(54);
+	nrfSetAutoAck(1);
+	nrfEnableDynamicPayloads();
+	
+	nrfClearInterruptBits();
+	nrfFlushRx();
+	nrfFlushTx();
+	
+	nrfOpen64WritingPipe(pipe);
+	nrfOpenReadingPipe(0, pipe);
+}
 
 // ---------------------------inputs?--------------------------------
 
@@ -37,7 +64,7 @@ enum states{off, standby, central, window, temprature};
 int state = standby;
 int devices = 0; // keeps track of how many devices are connected
 
-//info for other devices
+// info for other devices
 struct Device{
 	char	name[20];
 	int		ip[20];
