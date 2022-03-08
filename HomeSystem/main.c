@@ -30,7 +30,9 @@ ucg_t ucg;
 
 unsigned int8_t pipe[5] = {0x48, 0x76, 0x41, 0x30, 0x31};	// pipe address "HVA01"
 
-void int_nrf(){
+// setup connection
+void init_nrf(){
+	// sending
 	nrfspiInit();
 	nrfBegin();
 	
@@ -48,6 +50,10 @@ void int_nrf(){
 	
 	nrfOpen64WritingPipe(pipe);
 	nrfOpenReadingPipe(0, pipe);
+}
+
+void send(unsigned int8_t* &message){
+	nrfWrite(message, sizeof(unsigned int16_t));
 }
 
 // ---------------------------inputs?--------------------------------
@@ -178,6 +184,7 @@ int main(void){
 	init_stream(F_CPU);
 	init_adc();
 	init_clock();
+	init_nrf();
 	
 	sei();
 	
