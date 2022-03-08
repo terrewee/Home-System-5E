@@ -29,10 +29,10 @@ ucg_t ucg;
 // ---------------------------COMMUNICATION--------------------------------
 
 unsigned int8_t pipe[5] = {0x48, 0x76, 0x41, 0x30, 0x31};	// pipe address "HVA01"
+unsigned int8_t packet[32];
 
 // setup connection
 void init_nrf(){
-	// sending
 	nrfspiInit();
 	nrfBegin();
 	
@@ -48,12 +48,43 @@ void init_nrf(){
 	nrfFlushRx();
 	nrfFlushTx();
 	
+	// interrupt
+	PORTF.INT0MASK |= PIN6_bm;
+	PORTF.PIN6CTRL	= PORT_ISC_FALLING_gc;
+	PORTF.INTCTRL	= (PORTF.INTCTRL & ~PORT_INT0LVL_gm) | PORT_INT0LVL_LO_gc;
+	
+	// open pipes
 	nrfOpen64WritingPipe(pipe);
 	nrfOpenReadingPipe(0, pipe);
+	nrfStartListening();
 }
 
 void send(unsigned int8_t* &message){
 	nrfWrite(message, sizeof(unsigned int16_t));
+}
+
+// use led to show activity of communication
+void init_pwm(){
+	PORTC.OUTCLR = PIN0_bm;
+	PORTC.DIRSET = PIN0_bm;
+	
+	TCC0.CTRLB	= TC0_CCAEN_bm | TC_WGMODE_SINGLESLOPE_gc;
+	TCC0.CTRLA	= TC_CLKSEL_DIV1_gc;
+	TCC0.PER	= 9999;
+	TCC0.CCA	= 0;
+}
+
+// get package interrupt
+ISR(PORTF_INT0_vect){
+	unsigned int8_t tx_ds, max_rt, rx_dr;
+	
+	nrfWhatHappened(&tx_ds, &max_rt, &rx_dr);
+	
+	if (rx_dr){
+		nrfRead(packet,2);
+		TCC0.CCABUFL	= packet[0];
+		TCC0.CCABUFH	= packet[1];
+	}
 }
 
 // ---------------------------inputs?--------------------------------
@@ -70,59 +101,7 @@ enum states{off, standby, central, window, temprature};
 int state = standby;
 int devices = 0; // keeps track of how many devices are connected
 
-// info for other devices
-struct Device{
-	char	name[20];
-	int		ip[20];
-	int		ID[1];
-	int		type[1];
-};
-
-
 // ---------------------------FUNCTIONS--------------------------------
-
-// -----COMMUNICATION-----
-// will connect to another device through blue tooth
-Device connect(char[20] name, int[20] ip){
-	
-	// insert connecting here
-	// should get type from the other device as well
-	
-	if(/*connection is successful*/){
-		devices++;	//increase devices 
-		struct Device newDevice;
-		newDevice.name = name;
-		newDevice.ip = ip;
-		newDevice.ID = devices;
-		newDevice.type = /*recieved device type from connection*/;
-		return newDevice;
-	}
-	//if it can't connect
-	return NULL;
-}
-
-// for requesting commands to other devices
-int sendCommand(Device device, int commandID){
-	
-	//insert sending data to other device and getting a response back here
-	
-	if(/*recieve positive response back*/){
-		return 1;
-	}
-	else if(/*negative response back*/){
-		return -1;
-	}
-	//if no response back
-	return 0;
-}
-
-// for executing received commands NOTE: I don't know how blue tooth communication is handled, this is just an assumption
-void executeCommand(){
-	switch (){
-		// insert command options
-	}
-	// need to send back if executed sucessfully
-}
 
 // -----STATES-----
 
@@ -185,6 +164,8 @@ int main(void){
 	init_adc();
 	init_clock();
 	init_nrf();
+	
+	PMIC.CTRL |= PMIC_LOLVLEN_bm;
 	
 	sei();
 	
