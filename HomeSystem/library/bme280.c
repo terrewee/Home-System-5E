@@ -1,9 +1,10 @@
 /**************************************************************************/
-/*!
+/*
 @file     	bme280.c
 @author   	Julian Della Guardia
-@date		14-3-2022
+@date		18-3-2022
 @link		https://github.com/julian19072001/xMega-Libraries/tree/main
+@version	1.1
 
 Rewitten version of the arduino library to use on the HVA xMega.
 @orignal	David Zovko
@@ -17,12 +18,10 @@ Using the I2C library
 
 #include "bme280.h"
 
-TWI_t* twi;
-
-void init_BME280(TWI_t* twi_received, uint8_t f_sys)
+void init_BME280(uint8_t f_sys)
 {
-	twi = twi_received;										//store the selecte twi channel
-	_i2caddr = BME280_ADDRESS;								//store the I2C address in _i2caddr
+	twi = &TWIE;											//store the selecte twi channel
+	_i2caddr = BME280_ADDRESS_1;							//store the I2C address in _i2caddr
 
 	tempcal = 0;											//set tempcal to 0
 	temperature = 0;										//set tempature to 0
@@ -46,8 +45,9 @@ void setTempCal(float tcal)
 	tempcal = tcal;											
 }
 
-void read_BME280(void)
+void read_BME280(int16_t input_address)
 {
+	_i2caddr = input_address;								//set choosen I2C address
 	readTemperature();										//read the sensors measured temprature
 	readHumidity();											//read the sensors measured humidity
 	readPressure();											//read the sensors measured pressure
