@@ -115,8 +115,8 @@ int main(void)
 {
 	init_clock();
 	init_Nrf();
-	init_MQ135(PIN0_bm);
-    init_BME280(&TWIE,F_CPU);
+	init_MQ135(PORTA, PIN0_bm);
+    init_BME280(F_CPU);
 	sei();                                      
 	
     Interface[1] = DEFAULT_TEMPRATURE * 10;     //set default temprature
@@ -205,7 +205,7 @@ void init_Nrf(void)
 void getNewData(void)
 {
     //store new data for this node
-    read_BME280();
+    read_BME280(BME280_ADDRESS_1);
     Elec[0] = (getTemperature_C() * 10)/2;
     Elec[1] = getCorrectedPPM(getTemperature_C(),getHumidity()) / 10.0;
     Elec[2] = getHumidity();
