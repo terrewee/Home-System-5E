@@ -1,9 +1,10 @@
 /**************************************************************************/
-/*!
+/*
 @file     	bme280.h
 @author   	Julian Della Guardia
-@date		14-3-2022
+@date		18-3-2022
 @link		https://github.com/julian19072001/xMega-Libraries/tree/main
+@version	1.1
 
 Rewitten version of the arduino library to use on the HVA xMega.
 @orignal	David Zovko
@@ -22,7 +23,8 @@ Using the I2C library
 #include <stdbool.h>
 #include <math.h>
 
-#define BME280_ADDRESS      0x77          //bme I2C address
+#define BME280_ADDRESS_1      0x77         	//bme I2C address 1
+#define BME280_ADDRESS_2      0x76			//bme I2C address 2
 
 
 //address numbers for calibration registers
@@ -88,9 +90,9 @@ struct BME280_Calibration_Data
 	
 };
 
-void init_BME280(TWI_t* twi_received, uint8_t f_sys);
+void init_BME280(uint8_t f_sys);
 
-void read_BME280(void);                     //read the sensor for data
+void read_BME280(int16_t input_address);                     //read the sensor for data
 
 void setTempCal(float);						//we can set a calibration ofsset for the temperature.
 float getTemperature_C(void);               //temprature in celsius
@@ -122,4 +124,5 @@ int16_t   readS16_LE(int8_t reg); 			//little endian, read 16 signed bits of dat
 
 uint8_t   _i2caddr;							//stores I2C address for sensor
 int32_t   _sensorID;						
-int32_t   t_fine;							
+int32_t   t_fine;		
+TWI_t* 	  twi;					
