@@ -99,7 +99,7 @@ int main(void)
 {
 	init_clock();
 	init_Nrf();
-	init_MQ135(PIN0_bm);
+	init_MQ135(PORTA, PIN0_bm);
 
 	PORTE.INT1MASK = PIN6_bm;				//interrupt on pin E6
 	PORTE.PIN6CTRL = PORT_ISC_RISING_gc;	//interrupt on rising edge
